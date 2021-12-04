@@ -1,3 +1,4 @@
 .env
 users.json
 guilds.json
+__pycache__
