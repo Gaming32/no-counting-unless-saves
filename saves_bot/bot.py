@@ -184,6 +184,27 @@ class SavesBot(commands.Bot):
                                     await self.check_if_member_can_count(transferred_to)
                                 except HTTPException:
                                     logging.warning('User %s left guild before c!user response', transferred_to, exc_info=True)
+            else:
+                if message.content.startswith('\N{WARNING SIGN} <@'):
+                    text = message.content[4:].removeprefix('!')
+                    user_id, text = text.split('> You have used 1 ')
+                    if text[0] == 'g':
+                        text = text[24:]
+                        saves = float(text.split('/', 1)[0])
+                        async with self.data.guilds:
+                            data = await self.data.get_guild(message.guild.id)
+                            data['saves'] = saves
+                        await self.check_all_members(message.guild)
+                    else:
+                        text = text[26:]
+                        saves = float(text.split(' ', 1)[0])
+                        user_id = int(user_id)
+                        async with self.data.users:
+                            data = await self.data.get_user(user_id)
+                            data['saves'] = saves
+                        member = message.guild.get_member(user_id)
+                        if member is not None:
+                            await self.check_if_member_can_count(member)
         elif message.content.startswith('c!'):
             type = message.content.split(None, 1)[0][2:]
             if type in VALID_COMMANDS:
