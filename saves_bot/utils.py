@@ -1,6 +1,8 @@
 import asyncio
 from typing import Generic, TypeVar
 
+from discord.ext import commands
+
 _T = TypeVar('_T')
 
 
@@ -26,3 +28,9 @@ class WrappingLock(Generic[_T]):
 
     async def __aexit__(self, *args) -> None:
         self._lock.release()
+
+
+def _owner_only(ctx: commands.Context) -> bool:
+    return ctx.author.id == ctx.bot.owner_id
+
+owner_only = commands.check(_owner_only)

@@ -26,7 +26,7 @@ class SavesData:
     guilds_path: Path
     users: WrappingLock[dict[int, UserData]]
     guilds: WrappingLock[dict[int, GuildData]]
-    refreshing_task: Optional[asyncio.Task]
+    refreshing_task: Optional[asyncio.Task[float]]
 
     def __init__(self) -> None:
         self.users_path = Path('users.json')
@@ -36,15 +36,16 @@ class SavesData:
         self.last_refresh = 0
         self.refreshing_task = None
 
-    async def refresh_data(self) -> None:
+    async def refresh_data(self) -> float:
         aloop = asyncio.get_running_loop()
         if self.refreshing_task is not None:
             return await self.refreshing_task
         self.refreshing_task = aloop.create_task(self._refresh_data(aloop))
-        await self.refreshing_task
+        period = await self.refreshing_task
         self.refreshing_task = None
+        return period
 
-    async def _refresh_data(self, aloop: asyncio.AbstractEventLoop) -> None:
+    async def _refresh_data(self, aloop: asyncio.AbstractEventLoop) -> float:
         logging.info('Syncinc saves data...')
         start = time.perf_counter()
         await asyncio.gather(
@@ -52,7 +53,9 @@ class SavesData:
             self._refresh_single_data_dict(aloop, self.guilds_path, self.guilds),
         )
         end = time.perf_counter()
-        logging.info('Saves data synced in %f seconds', end - start)
+        period = end - start
+        logging.info('Saves data synced in %f seconds', period)
+        return period
 
     async def _refresh_single_data_dict(self,
             aloop: asyncio.AbstractEventLoop,
