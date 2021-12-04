@@ -1,0 +1,4 @@
+git+https://github.com/Rapptz/discord.py@master#egg=discord.py
+python-dotenv
+aiofiles
+multidict
